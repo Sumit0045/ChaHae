@@ -10,13 +10,11 @@ bot.command("start", (ctx) => {
     let name = ctx.from.first_name;
     ctx.reply(`Hello, ${name},\n\nI am your new AI friend, and I’m built using JavaScript.`,
              Markup.inlineKeyboard([
-             [Markup.button.url("Source", "https://github.com/Sumit0045/Jsbot")]]))
+             [Markup.button.url("Source", "https://github.com/Sumit0045/ChaHae")]]))
 });
 
 
 
-
-// Middleware to check if the user is an admin
 const isAdmin = async (ctx) => {
     const chatId = ctx.chat.id;
     const userId = ctx.from.id;
@@ -25,36 +23,28 @@ const isAdmin = async (ctx) => {
     return member.status === 'administrator' || member.status === 'creator';
 };
 
-// Command to ban a user
+
+
+
 bot.command('ban', async (ctx) => {
     if (await isAdmin(ctx)) {
-        const userId = ctx.message.reply_to_message?.from?.id; // Get the user ID from a replied message
-        if (!userId) {
-            return ctx.reply('Please reply to the user you want to ban.');
-        }
+        const userId = ctx.message.reply_to_message?.from?.id;
+        const name = ctx.message.reply_to_message?.from?.first_name;
+        const reason = ctx.message.text.split(' ').slice(1).join(' ');
 
-        try {
-            await ctx.telegram.banChatMember(ctx.chat.id, userId);
-            ctx.reply(`User with ID ${userId} has been banned.`);
-        } catch (error) {
-            ctx.reply(`Error banning user: ${error.message}`);
-        }
-    } else {
-        ctx.reply('You need to be an admin to use this command.');
-    }
-});
-
-// Command to unban a user
-bot.command('unban', async (ctx) => {
-    if (await isAdmin(ctx)) {
-        const userId = ctx.message.reply_to_message?.from?.id; // Get the user ID from a replied message
         if (!userId) {
             return ctx.reply('Please reply to the user you want to unban.');
         }
 
         try {
-            await ctx.telegram.unbanChatMember(ctx.chat.id, userId);
-            ctx.reply(`User with ID ${userId} has been unbanned.`);
+            await ctx.telegram.banChatMember(ctx.chat.id, userId);
+            let ban_msg = `**BAN MOMENT**\n\nName: ${name}\nUser ID: ${userId}`;
+            
+            if (reason) {
+                ban_msg += `\nReason: ${reason}`;
+            }
+
+            ctx.reply(ban_msg);
         } catch (error) {
             ctx.reply(`Error unbanning user: ${error.message}`);
         }
@@ -62,6 +52,36 @@ bot.command('unban', async (ctx) => {
         ctx.reply('You need to be an admin to use this command.');
     }
 });
+
+
+
+bot.command('unban', async (ctx) => {
+    if (await isAdmin(ctx)) {
+        const userId = ctx.message.reply_to_message?.from?.id;
+        const name = ctx.message.reply_to_message?.from?.first_name;
+        const reason = ctx.message.text.split(' ').slice(1).join(' ');
+
+        if (!userId) {
+            return ctx.reply('Please reply to the user you want to unban.');
+        }
+
+        try {
+            await ctx.telegram.unbanChatMember(ctx.chat.id, userId);
+            let unban_msg = `**UNBAN MOMENT**\n\nName: ${name}\nUser ID: ${userId}`;
+            
+            if (reason) {
+                unban_msg += `\nReason: ${reason}`;
+            }
+
+            ctx.reply(unban_msg);
+        } catch (error) {
+            ctx.reply(`Error unbanning user: ${error.message}`);
+        }
+    } else {
+        ctx.reply('You need to be an admin to use this command.');
+    }
+});
+
 
 
 
