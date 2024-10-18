@@ -8,7 +8,9 @@ const bot = new Telegraf(config.BOT_TOKEN);
 
 bot.command("start", (ctx) => {
     let name = ctx.from.first_name;
-    ctx.reply(`Hello, $name,\n\nI am your new AI friend, and I’m built using JavaScript.`)
+    ctx.reply(`Hello, ${name},\n\nI am your new AI friend, and I’m built using JavaScript.`,
+             Markup.inlineKeyboard([
+             [Markup.button.url("Source", "https://github.com/Sumit0045/Jsbot")]]))
 });
 
 
