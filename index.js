@@ -38,7 +38,7 @@ bot.command('ban', async (ctx) => {
 
         try {
             await ctx.telegram.banChatMember(ctx.chat.id, userId);
-            let ban_msg = `**BAN MOMENT**\n\nName: ${name}\nUser ID: ${userId}`;
+            let ban_msg = `BAN MOMENT\n\nName: ${name}\nUser ID: ${userId}`;
             
             if (reason) {
                 ban_msg += `\nReason: ${reason}`;
@@ -67,7 +67,7 @@ bot.command('unban', async (ctx) => {
 
         try {
             await ctx.telegram.unbanChatMember(ctx.chat.id, userId);
-            let unban_msg = `**UNBAN MOMENT**\n\nName: ${name}\nUser ID: ${userId}`;
+            let unban_msg = `UNBAN MOMENT\n\nName: ${name}\nUser ID: ${userId}`;
             
             if (reason) {
                 unban_msg += `\nReason: ${reason}`;
