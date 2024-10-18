@@ -1,36 +1,35 @@
-const { Telegraf, Markup, session } = require('telegraf');
+const { Telegraf, Markup } = require('telegraf');
 const { exec } = require('child_process');
-const { StringIO } = require('stream');
 const fs = require('fs');
 const path = require('path');
 const { OWNER_ID, BOT_TOKEN } = require('./config');
-
 
 
 const bot = new Telegraf(BOT_TOKEN);
 
 
 
+// Start command
 bot.command("start", (ctx) => {
     let name = ctx.from.first_name;
     ctx.reply(`Hello, ${name},\n\nI am your new AI friend, and I’m built using JavaScript.`,
-             Markup.inlineKeyboard([
-             [Markup.button.url("Source", "https://github.com/Sumit0045/ChaHae")]]))
+        Markup.inlineKeyboard([
+            [Markup.button.url("Source", "https://github.com/Sumit0045/ChaHae")]
+        ]));
 });
 
 
-
+// Check if the user is an admin
 const isAdmin = async (ctx) => {
     const chatId = ctx.chat.id;
     const userId = ctx.from.id;
-    
+
     const member = await ctx.telegram.getChatMember(chatId, userId);
     return member.status === 'administrator' || member.status === 'creator';
 };
 
 
-
-
+// Ban command
 bot.command('ban', async (ctx) => {
     if (await isAdmin(ctx)) {
         const userId = ctx.message.reply_to_message?.from?.id;
@@ -38,20 +37,19 @@ bot.command('ban', async (ctx) => {
         const reason = ctx.message.text.split(' ').slice(1).join(' ');
 
         if (!userId) {
-            return ctx.reply('Please reply to the user you want to unban.');
+            return ctx.reply('Please reply to the user you want to ban.');
         }
 
         try {
             await ctx.telegram.banChatMember(ctx.chat.id, userId);
-            let ban_msg = `BAN MOMENT\n\nName: ${name}\nUser ID: ${userId}`;
-            
+            let ban_msg = `<b>Ban Moment</b>\n\n<b>Name</b>: ${name}\n<b>User ID</b>: <code>${userId}</code>`;
             if (reason) {
-                ban_msg += `\nReason: ${reason}`;
+                ban_msg += `\n<b>Reason</b>: ${reason}`;
             }
 
-            ctx.reply(ban_msg);
+            ctx.replyWithHTML(ban_msg);
         } catch (error) {
-            ctx.reply(`Error unbanning user: ${error.message}`);
+            ctx.reply(`Error banning user: ${error.message}`);
         }
     } else {
         ctx.reply('You need to be an admin to use this command.');
@@ -59,7 +57,7 @@ bot.command('ban', async (ctx) => {
 });
 
 
-
+// Unban command
 bot.command('unban', async (ctx) => {
     if (await isAdmin(ctx)) {
         const userId = ctx.message.reply_to_message?.from?.id;
@@ -72,13 +70,12 @@ bot.command('unban', async (ctx) => {
 
         try {
             await ctx.telegram.unbanChatMember(ctx.chat.id, userId);
-            let unban_msg = `UNBAN MOMENT\n\nName: ${name}\nUser ID: ${userId}`;
-            
+            let unban_msg = `<b>Unban Moment</b>\n\n<b>Name</b>: ${name}\n<b>User ID</b>: <code>${userId}</code>`;
             if (reason) {
-                unban_msg += `\nReason: ${reason}`;
+                unban_msg += `\n<b>Reason</b>: ${reason}`;
             }
 
-            ctx.reply(unban_msg);
+            ctx.replyWithHTML(unban_msg);
         } catch (error) {
             ctx.reply(`Error unbanning user: ${error.message}`);
         }
@@ -88,13 +85,8 @@ bot.command('unban', async (ctx) => {
 });
 
 
-
-
-
-
-
-
-async function aexec(code, ctx) {
+// Execute command function
+async function aexec(code) {
     return new Promise((resolve, reject) => {
         exec(`node -e "${code}"`, (error, stdout, stderr) => {
             if (error) {
@@ -107,7 +99,7 @@ async function aexec(code, ctx) {
 }
 
 
-
+// Reply or edit function
 async function editOrReply(ctx, text) {
     if (ctx.message.reply_to_message) {
         await ctx.reply(text);
@@ -116,6 +108,8 @@ async function editOrReply(ctx, text) {
     }
 }
 
+
+// Eval command
 bot.command(['eval', 'c'], async (ctx) => {
     if (ctx.from.id !== OWNER_ID) return;
 
@@ -126,26 +120,33 @@ bot.command(['eval', 'c'], async (ctx) => {
 
     try {
         const start = Date.now();
-        const output = await aexec(command, ctx);
+        const output = await aexec(command);
         const runtime = Date.now() - start;
 
-        const finalOutput = `<b>📕 ʀᴇsᴜʟᴛ :</b>\n<pre>${output}</pre>`;
+        let finalOutput = `<b>📕 Result:</b>\n<pre>${output}</pre>\n`;
+        finalOutput += `<b>⏱️ Runtime:</b> ${runtime} ms`;
+
         if (finalOutput.length > 4096) {
             const filename = path.join(__dirname, 'output.txt');
             fs.writeFileSync(filename, output);
-            await ctx.replyWithDocument({ source: filename }, {
-                caption: `<b>🔗 ᴇᴠᴀʟ :</b>\n<code>${command}</code>\n\n<b>📕 ʀᴇsᴜʟᴛ :</b> Attached document`,
-            });
+            await ctx.replyWithDocument(
+                { source: filename },
+                {
+                    caption: `<b>🔗 Eval:</b>\n<code>${command}</code>\n\n<b>📕 Result:</b> Attached document`,
+                }
+            );
             fs.unlinkSync(filename);
         } else {
             await editOrReply(ctx, finalOutput);
         }
     } catch (error) {
-        await editOrReply(ctx, `<b>ERROR :</b>\n<pre>${error}</pre>`);
+        await editOrReply(ctx, `<b>ERROR:</b>\n<pre>${error.message}</pre>`);
     }
 });
 
 
+
+// Shell command
 bot.command('sh', async (ctx) => {
     if (ctx.from.id !== OWNER_ID) return;
 
@@ -155,7 +156,7 @@ bot.command('sh', async (ctx) => {
     }
 
     try {
-        const output = await aexec(command, ctx);
+        const output = await aexec(command);
         await editOrReply(ctx, `<b>OUTPUT :</b>\n<pre>${output}</pre>`);
     } catch (error) {
         await editOrReply(ctx, `<b>ERROR :</b>\n<pre>${error}</pre>`);
@@ -163,6 +164,8 @@ bot.command('sh', async (ctx) => {
 });
 
 
+
+// Update command
 bot.command('update', async (ctx) => {
     if (ctx.from.id !== OWNER_ID) return;
 
@@ -180,21 +183,18 @@ bot.command('update', async (ctx) => {
 
 
 
-
-
-
-// ------------ Error handling ----------------
+// Error handling
 bot.catch((err) => {
     console.error('Error:', err);
 });
 
-
-// ------------ START-POLLING ----------------
+// Start polling
 bot.launch();
 console.log("Bot Deployed Successfully !!");
 
 process.once('SIGINT', () => bot.stop('SIGINT'));
 process.once('SIGTERM', () => bot.stop('SIGTERM'));
+
 
 
 
