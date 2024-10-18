@@ -1,26 +1,28 @@
 const { Telegraf } = require('telegraf');
 const config = require('./config');
 
+
 const bot = new Telegraf(config.BOT_TOKEN);
 
-// Basic command
-bot.start((ctx) => ctx.reply('Welcome!'));
-bot.help((ctx) => ctx.reply('Send me a sticker'));
 
-// Respond to any text message
-bot.on('text', (ctx) => {
-    ctx.reply(`You said: ${ctx.message.text}`);
+
+bot.command("start", (ctx) => {
+    let name = ctx.from.first_name;
+    ctx.reply(`Hello, $name,\n\nI am your new AI friend, and I’m built using JavaScript.`)
 });
 
-// Error handling
+
+
+// ------------ Error handling ----------------
 bot.catch((err) => {
     console.error('Error:', err);
 });
 
-// Start polling
-bot.launch();
 
-// Enable graceful stop
+// ------------ START-POLLING ----------------
+bot.launch();
+console.log("Bot Deployed Successfully !!");
+
 process.once('SIGINT', () => bot.stop('SIGINT'));
 process.once('SIGTERM', () => bot.stop('SIGTERM'));
 
